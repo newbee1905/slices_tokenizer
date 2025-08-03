@@ -23,7 +23,9 @@ classifiers = [
 ]
 
 # This project has no runtime Python dependencies
-dependencies = []
+dependencies = [
+    "tqdm>=4.67.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/newbee1905/slices_tokenizer"

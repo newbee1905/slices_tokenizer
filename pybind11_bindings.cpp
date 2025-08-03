@@ -42,6 +42,9 @@ PYBIND11_MODULE(slices_tokenizer, m) {
 		.def("train_from_iterator", &SLICESTokenizer::train_from_iterator,
 			 "Train the tokenizer from a list of strings",
 			 py::arg("training_data"), py::arg("vocab_size") = 1000)
+		.def("train", &SLICESTokenizer::train,
+			 "Train the tokenizer from a Python iterator",
+			 py::arg("iterator"), py::arg("vocab_size") = 1000, py::arg("tqdm_instance") = py::none())
 		.def("encode", &SLICESTokenizer::encode,
 			 "Encode a string to token IDs",
 			 py::arg("text"))

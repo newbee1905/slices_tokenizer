@@ -16,7 +16,11 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 using json = nlohmann::json;
+namespace py = pybind11;
 
 struct TokenSpan {
 	std::string token;
@@ -126,6 +130,57 @@ public:
 			}
 		}
 		return tokens;
+	}
+
+	void train(py::iterator it, int vocab_size = 1000, py::object tqdm_instance = py::none()) {
+		vocab_size_ = vocab_size;
+		vocab_.clear();
+		id_to_token_.clear();
+		
+		for (size_t i = 0; i < special_tokens_.size(); ++i) {
+			vocab_[special_tokens_[i]] = static_cast<int>(i);
+			id_to_token_[static_cast<int>(i)] = special_tokens_[i];
+		}
+		
+		std::unordered_map<std::string, int> token_counts;
+		
+		fmt::print("Collecting tokens from training data iterator...\n");
+
+		py::function tqdm_update;
+		if (!tqdm_instance.is_none()) {
+			tqdm_update = tqdm_instance.attr("update");
+		}
+
+		for (auto item_handle : it) {
+			std::string text = py::cast<std::string>(item_handle);
+
+			auto tokens = pre_tokenize(text);
+			for (const auto& token_span : tokens) {
+				token_counts[token_span.token]++;
+			}
+
+			if (tqdm_update) {
+				tqdm_update(1);
+			}
+		}
+		
+		std::vector<std::pair<std::string, int>> sorted_tokens(token_counts.begin(), token_counts.end());
+		std::sort(sorted_tokens.begin(), sorted_tokens.end(), 
+				  [](const auto& a, const auto& b) { return a.second > b.second; });
+		
+		int token_id = static_cast<int>(special_tokens_set_.size());
+		for (const auto& [token, count] : sorted_tokens) {
+			if (token_id >= vocab_size_) {
+				break;
+			}
+			if (vocab_.find(token) == vocab_.end()) { 
+				vocab_[token] = token_id;
+				id_to_token_[token_id] = token;
+				token_id++;
+			}
+		}
+		
+		fmt::print("Vocabulary built with {} tokens\n", vocab_.size());
 	}
 	
 	// Train the tokenizer from an iterator of strings

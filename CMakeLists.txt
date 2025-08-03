@@ -41,7 +41,6 @@ FetchContent_Declare(
 	GIT_SHALLOW TRUE
 	GIT_PROGRESS TRUE
 )
-FetchContent_MakeAvailable(fmt)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -58,13 +57,12 @@ endif()
 
 add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
 
+FetchContent_MakeAvailable(pybind11 fmt nlohmann_json)
+
 # Configure nlohmann/json options (don't build tests/examples)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 set(JSON_MultipleHeaders OFF CACHE INTERNAL "")
-
-FetchContent_MakeAvailable(nlohmann_json)
-FetchContent_MakeAvailable(fmt)
 
 add_executable(slices_tokenizer_demo main.cpp)
 
@@ -104,11 +102,12 @@ target_include_directories(slices_tokenizer_static INTERFACE
 target_link_libraries(slices_tokenizer_static INTERFACE 
 	nlohmann_json::nlohmann_json
 	fmt::fmt
+	pybind11::headers
 )
 
 add_library(SLICESTokenizer::static ALIAS slices_tokenizer_static)
 
-target_link_libraries(slices_tokenizer_demo PRIVATE SLICESTokenizer::static)
+target_link_libraries(slices_tokenizer_demo PRIVATE SLICESTokenizer::static pybind11::embed)
 target_link_libraries(slices_tokenizer PRIVATE SLICESTokenizer::static)
 target_compile_definitions(slices_tokenizer PRIVATE VERSION_INFO="${PROJECT_VERSION}")
 
