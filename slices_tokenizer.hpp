@@ -101,6 +101,8 @@ public:
 				token_len = 1;
 				if (i + 1 < text.length() && std::islower(text[i + 1])) {
 					token_len = 2;
+				} else {
+					token_len = 3;
 				}
 			}
 
